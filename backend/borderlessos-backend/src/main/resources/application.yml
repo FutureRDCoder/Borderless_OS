@@ -1,0 +1,109 @@
+spring:
+  application:
+    name: borderlessos-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/borderlessos
+    username: borderlessos_app
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
+server:
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        name: JSESSIONID
+        http-only: true
+        secure: false
+        same-site: lax
+
+  error:
+    include-message: never
+    include-stacktrace: never
+
+
+fx:
+  provider:
+    primary: frankfurter
+    fallback: mock
+
+  frankfurter:
+    base-url: https://api.frankfurter.dev/v2
+    connect-timeout: 3s
+    read-timeout: 5s
+    maximum-rate-age: 4d
+
+  quote:
+    validity: 5m
+
+  currencies:
+    supported:
+      - INR
+      - USD
+      - EUR
+      - GBP
+      - AUD
+      - NZD
+      - JPY
+
+  amount-limits:
+    INR:
+      minimum: 100
+      maximum: 500000
+    USD:
+      minimum: 1.20
+      maximum: 6000
+    EUR:
+      minimum: 1.10
+      maximum: 5500
+    GBP:
+      minimum: 0.95
+      maximum: 4750
+    AUD:
+      minimum: 1.80
+      maximum: 9000
+    NZD:
+      minimum: 2.00
+      maximum: 10000
+    JPY:
+      minimum: 172
+      maximum: 860000
+
+  minor-units:
+    INR: 2
+    USD: 2
+    EUR: 2
+    GBP: 2
+    AUD: 2
+    NZD: 2
+    JPY: 0
+
+borderlessos:
+  compliance:
+    hold-countries:
+      - NZ
+    rule-id: SIM-DESTINATION-REVIEW
+
+  provider:
+    name: mock
+    default-scenario: SUCCESS
+    scenarios:
+      US: SUCCESS
+      GB: FAILURE
+      JP: TIMEOUT_RESOLVES_SUCCESS
+      AU: TIMEOUT_INCONCLUSIVE
+      NZ: SUCCESS

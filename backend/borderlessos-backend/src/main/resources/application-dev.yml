@@ -1,0 +1,26 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+borderlessos:
+  demo-users:
+    customer:
+      email: customer@borderlessos.local
+      display-name: Demo Customer
+      password: ${DEMO_CUSTOMER_PASSWORD:BorderlessDemo123!}
+
+    operations:
+      email: operations@borderlessos.local
+      display-name: Demo Operations
+      password: ${DEMO_OPERATIONS_PASSWORD:BorderlessDemo123!}
+
+    compliance:
+      email: compliance@borderlessos.local
+      display-name: Demo Compliance
+      password: ${DEMO_COMPLIANCE_PASSWORD:BorderlessDemo123!}
+
+    admin:
+      email: admin@borderlessos.local
+      display-name: Demo Administrator
+      password: ${DEMO_ADMIN_PASSWORD:BorderlessDemo123!}

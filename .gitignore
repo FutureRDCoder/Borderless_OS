@@ -1,0 +1,10 @@
+.env
+backend/borderlessos-backend/.env
+backend/borderlessos-backend/target/
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+*.log
+.idea/
+.DS_Store
+DEMO_ACCOUNTS.local.md

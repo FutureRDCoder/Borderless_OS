@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: borderlessos
+      POSTGRES_USER: borderlessos_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - borderlessos_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U borderlessos_app -d borderlessos"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend/borderlessos-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/borderlessos
+      SPRING_DATASOURCE_USERNAME: borderlessos_app
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      DEMO_CUSTOMER_PASSWORD: ${DEMO_CUSTOMER_PASSWORD:-BorderlessDemo123!}
+      DEMO_OPERATIONS_PASSWORD: ${DEMO_OPERATIONS_PASSWORD:-BorderlessDemo123!}
+      DEMO_COMPLIANCE_PASSWORD: ${DEMO_COMPLIANCE_PASSWORD:-BorderlessDemo123!}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-BorderlessDemo123!}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:8080/actuator/health | grep -q UP",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  borderlessos_postgres_data:
