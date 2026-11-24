@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { HomeRedirect, ProtectedRoute } from './components/ProtectedRoute'
+import { AuthEntryPage } from './pages/AuthEntryPage'
+import { EmployeeLoginPage } from './pages/EmployeeLoginPage'
+import { EmployeeSignupPage } from './pages/EmployeeSignupPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { CustomerDashboard } from './pages/customer/CustomerDashboard'
@@ -16,8 +19,12 @@ import { AdminDashboard } from './pages/admin/AdminDashboard'
 export function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/login" element={<AuthEntryPage />} />
+      <Route path="/login/employee" element={<EmployeeLoginPage />} />
+      <Route path="/login/customer" element={<LoginPage />} />
+      <Route path="/signup" element={<Navigate to="/login" replace />} />
+      <Route path="/signup/employee" element={<EmployeeSignupPage />} />
+      <Route path="/signup/customer" element={<SignupPage />} />
       <Route path="/" element={<HomeRedirect />} />
 
       <Route element={<Layout />}>

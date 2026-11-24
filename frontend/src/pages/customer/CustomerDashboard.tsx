@@ -4,6 +4,7 @@ import { api } from '../../api/client'
 import type { Transfer } from '../../api/types'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { Loading } from '../../components/Loading'
+import { Pagination, usePagination } from '../../components/Pagination'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDateTime, formatMoney } from '../../utils/format'
 
@@ -35,6 +36,8 @@ export function CustomerDashboard() {
       return accumulator
     }, {})
   }, [transfers])
+
+  const transferPages = usePagination(transfers)
 
   if (loading) {
     return <Loading label="Loading your transfers…" />
@@ -86,46 +89,59 @@ export function CustomerDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Recipient</th>
-                  <th>Destination</th>
-                  <th>Send amount</th>
-                  <th>Estimated receive</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {transfers.map((transfer) => (
-                  <tr key={transfer.id}>
-                    <td>
-                      <strong>{transfer.recipientName}</strong>
-                      <small className="muted block">
-                        {transfer.maskedAccountReference}
-                      </small>
-                    </td>
-                    <td>{transfer.destinationCountry} / {transfer.destinationCurrency}</td>
-                    <td>{formatMoney(transfer.sourceAmount, transfer.sourceCurrency)}</td>
-                    <td>{formatMoney(transfer.destinationAmount, transfer.destinationCurrency)}</td>
-                    <td><StatusBadge status={transfer.status} /></td>
-                    <td>{formatDateTime(transfer.createdAt)}</td>
-                    <td>
-                      <Link
-                        className="button small"
-                        to={`/customer/transfers/${transfer.id}`}
-                      >
-                        Open
-                      </Link>
-                    </td>
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Recipient</th>
+                    <th>Destination</th>
+                    <th>Send amount</th>
+                    <th>Estimated receive</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {transferPages.items.map((transfer) => (
+                    <tr key={transfer.id}>
+                      <td>
+                        <strong>{transfer.recipientName}</strong>
+                        <small className="muted block">
+                          {transfer.maskedAccountReference}
+                        </small>
+                      </td>
+                      <td>
+                        {transfer.destinationCountry} /{' '}
+                        {transfer.destinationCurrency}
+                      </td>
+                      <td>
+                        {formatMoney(transfer.sourceAmount, transfer.sourceCurrency)}
+                      </td>
+                      <td>
+                        {formatMoney(transfer.destinationAmount, transfer.destinationCurrency)}
+                      </td>
+                      <td><StatusBadge status={transfer.status} /></td>
+                      <td>{formatDateTime(transfer.createdAt)}</td>
+                      <td>
+                        <Link
+                          className="button small"
+                          to={`/customer/transfers/${transfer.id}`}
+                        >
+                          Open
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              state={transferPages.state}
+              onPageChange={transferPages.setPage}
+            />
+          </>
         )}
       </section>
     </div>

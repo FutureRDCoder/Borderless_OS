@@ -4,6 +4,7 @@ import { api } from '../../api/client'
 import type { TimelineEvent, Transfer } from '../../api/types'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { Loading } from '../../components/Loading'
+import { Pagination, usePagination } from '../../components/Pagination'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDateTime, formatMoney } from '../../utils/format'
 
@@ -18,6 +19,7 @@ export function CustomerTransferDetailPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const timelinePages = usePagination(timeline, 5)
 
   const latestInformationRequest = useMemo(() => {
     return [...timeline]
@@ -245,7 +247,7 @@ export function CustomerTransferDetailPage() {
         <section className="card">
           <h2>Status history</h2>
           <ol className="timeline">
-            {timeline.map((event) => (
+            {timelinePages.items.map((event) => (
               <li key={event.id}>
                 <span className="timeline-dot" />
                 <div>
@@ -257,6 +259,10 @@ export function CustomerTransferDetailPage() {
               </li>
             ))}
           </ol>
+          <Pagination
+            state={timelinePages.state}
+            onPageChange={timelinePages.setPage}
+          />
         </section>
       </div>
     </div>

@@ -4,7 +4,7 @@ import type { Role } from '../api/types'
 import { Loading } from './Loading'
 
 export function ProtectedRoute({ allow }: { allow: Role[] }) {
-  const { user, primaryRole, initialising } = useAuth()
+  const { user, roles, initialising } = useAuth()
 
   if (initialising) {
     return <Loading label="Checking your session…" />
@@ -14,7 +14,7 @@ export function ProtectedRoute({ allow }: { allow: Role[] }) {
     return <Navigate to="/login" replace />
   }
 
-  if (!primaryRole || !allow.includes(primaryRole)) {
+  if (!roles.some((role) => allow.includes(role))) {
     return <Navigate to="/" replace />
   }
 

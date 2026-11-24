@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/fx/quotes")
-@PreAuthorize("hasRole('CUSTOMER')")
+@PreAuthorize("hasRole(@appRoles.customer())")
 public class FxQuoteController {
 
     private final FxQuoteService fxQuoteService;

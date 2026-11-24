@@ -10,25 +10,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class RbacTestController {
 
     @GetMapping("/customer")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasRole(@appRoles.customer())")
     public String customerEndpoint() {
         return "Customer access granted";
     }
 
     @GetMapping("/operations")
-    @PreAuthorize("hasRole('OPERATIONS')")
+    @PreAuthorize("hasRole(@appRoles.operations())")
     public String operationsEndpoint() {
         return "Operations access granted";
     }
 
     @GetMapping("/compliance")
-    @PreAuthorize("hasRole('COMPLIANCE')")
+    @PreAuthorize("hasRole(@appRoles.compliance())")
     public String complianceEndpoint() {
         return "Compliance access granted";
     }
 
     @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appRoles.admin())")
     public String adminEndpoint() {
         return "Admin access granted";
     }

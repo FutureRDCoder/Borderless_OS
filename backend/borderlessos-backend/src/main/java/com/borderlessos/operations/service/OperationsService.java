@@ -1,5 +1,6 @@
 package com.borderlessos.operations.service;
 
+import com.borderlessos.common.security.AppRoles;
 import com.borderlessos.common.security.CurrentActor;
 import com.borderlessos.common.security.CurrentActorService;
 import com.borderlessos.compliance.entity.ComplianceHoldStatus;
@@ -275,15 +276,7 @@ public class OperationsService {
     }
 
     private CurrentActor requireOperationsActor() {
-        CurrentActor actor = currentActorService.requireActor();
-
-        if (!actor.hasRole("OPERATIONS")) {
-            throw new IllegalStateException(
-                    "Only the OPERATIONS role may perform this action."
-            );
-        }
-
-        return actor;
+        return currentActorService.requireRole(AppRoles.OPERATIONS);
     }
 
     private String requireNonBlank(String value, String fieldName) {

@@ -23,6 +23,8 @@ public interface TransferRepository extends JpaRepository<Transfer, UUID> {
             Collection<TransferStatus> statuses
     );
 
+    List<Transfer> findTop200ByStatusOrderByCreatedAtAsc(TransferStatus status);
+
     List<Transfer> findAllByOrderByCreatedAtDesc();
 
     List<Transfer> findTop200ByOrderByCreatedAtDesc();

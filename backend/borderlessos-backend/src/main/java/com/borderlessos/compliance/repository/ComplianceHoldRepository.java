@@ -20,6 +20,10 @@ public interface ComplianceHoldRepository
             ComplianceHoldStatus status
     );
 
+    Optional<ComplianceHold> findFirstByTransferIdOrderByOpenedAtDesc(
+            UUID transferId
+    );
+
     boolean existsByTransferIdAndStatus(
             UUID transferId,
             ComplianceHoldStatus status

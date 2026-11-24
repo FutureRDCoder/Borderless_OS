@@ -2,6 +2,7 @@ package com.borderlessos.compliance.dto.response;
 
 import com.borderlessos.compliance.entity.ComplianceDecision;
 import com.borderlessos.compliance.entity.ComplianceDecisionType;
+import com.borderlessos.transfer.enums.TransferStatus;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -14,6 +15,8 @@ public record ComplianceDecisionResponse(
         String actorEmail,
         String actorRole,
         String reason,
+        TransferStatus previousStatus,
+        TransferStatus resultingStatus,
         Instant createdAt
 ) {
     public static ComplianceDecisionResponse from(
@@ -27,6 +30,8 @@ public record ComplianceDecisionResponse(
                 decision.getActorEmail(),
                 decision.getActorRole(),
                 decision.getReason(),
+                decision.getPreviousStatus(),
+                decision.getResultingStatus(),
                 decision.getCreatedAt()
         );
     }

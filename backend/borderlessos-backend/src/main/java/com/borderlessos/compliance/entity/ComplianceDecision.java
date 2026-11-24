@@ -1,6 +1,7 @@
 package com.borderlessos.compliance.entity;
 
 import com.borderlessos.common.security.CurrentActor;
+import com.borderlessos.transfer.enums.TransferStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -37,6 +38,14 @@ public class ComplianceDecision {
     @Column(length = 1000)
     private String reason;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "previous_status", length = 32)
+    private TransferStatus previousStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resulting_status", length = 32)
+    private TransferStatus resultingStatus;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -49,6 +58,8 @@ public class ComplianceDecision {
             ComplianceDecisionType decisionType,
             CurrentActor actor,
             String reason,
+            TransferStatus previousStatus,
+            TransferStatus resultingStatus,
             Instant now
     ) {
         ComplianceDecision decision = new ComplianceDecision();
@@ -60,6 +71,8 @@ public class ComplianceDecision {
         decision.actorEmail = actor.email();
         decision.actorRole = actor.role();
         decision.reason = reason;
+        decision.previousStatus = previousStatus;
+        decision.resultingStatus = resultingStatus;
         decision.createdAt = now;
         return decision;
     }

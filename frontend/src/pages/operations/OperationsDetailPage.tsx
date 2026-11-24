@@ -9,6 +9,7 @@ import type {
 } from '../../api/types'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { Loading } from '../../components/Loading'
+import { Pagination, usePagination } from '../../components/Pagination'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDateTime, formatMoney } from '../../utils/format'
 
@@ -26,6 +27,9 @@ export function OperationsDetailPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const inquiryPages = usePagination(providerAttempt?.inquiries ?? [], 5)
+  const informationPages = usePagination(informationRequests, 5)
+  const auditPages = usePagination(auditEvents, 5)
 
   async function load() {
     if (!id) {
@@ -269,19 +273,25 @@ export function OperationsDetailPage() {
           {providerAttempt.inquiries.length === 0 ? (
             <p className="muted small">No status inquiries yet.</p>
           ) : (
-            <ul className="plain-list">
-              {providerAttempt.inquiries.map((inquiry) => (
-                <li key={inquiry.id}>
-                  <strong>{inquiry.result}</strong>
-                  {inquiry.resolvedOutcome
-                    ? ` → ${inquiry.resolvedOutcome}`
-                    : ''}
-                  <span className="muted small">
-                    {' '}· {formatDateTime(inquiry.createdAt)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="plain-list">
+                {inquiryPages.items.map((inquiry) => (
+                  <li key={inquiry.id}>
+                    <strong>{inquiry.result}</strong>
+                    {inquiry.resolvedOutcome
+                      ? ` → ${inquiry.resolvedOutcome}`
+                      : ''}
+                    <span className="muted small">
+                      {' '}· {formatDateTime(inquiry.createdAt)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Pagination
+                state={inquiryPages.state}
+                onPageChange={inquiryPages.setPage}
+              />
+            </>
           )}
         </section>
       )}
@@ -323,28 +333,34 @@ export function OperationsDetailPage() {
           {informationRequests.length === 0 ? (
             <p className="muted small">No information requests.</p>
           ) : (
-            <ul className="plain-list">
-              {informationRequests.map((request) => (
-                <li key={request.id}>
-                  <strong>{request.message}</strong>
-                  <p className="muted small">
-                    Requested {formatDateTime(request.createdAt)}
-                  </p>
-                  {request.responseMessage && (
-                    <p className="small">
-                      Customer: {request.responseMessage}
+            <>
+              <ul className="plain-list">
+                {informationPages.items.map((request) => (
+                  <li key={request.id}>
+                    <strong>{request.message}</strong>
+                    <p className="muted small">
+                      Requested {formatDateTime(request.createdAt)}
                     </p>
-                  )}
-                </li>
-              ))}
-            </ul>
+                    {request.responseMessage && (
+                      <p className="small">
+                        Customer: {request.responseMessage}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <Pagination
+                state={informationPages.state}
+                onPageChange={informationPages.setPage}
+              />
+            </>
           )}
         </section>
 
         <section className="card">
           <h2>Audit history</h2>
           <ol className="timeline">
-            {auditEvents.map((event) => (
+            {auditPages.items.map((event) => (
               <li key={event.id}>
                 <span className="timeline-dot" />
                 <div>
@@ -357,6 +373,10 @@ export function OperationsDetailPage() {
               </li>
             ))}
           </ol>
+          <Pagination
+            state={auditPages.state}
+            onPageChange={auditPages.setPage}
+          />
         </section>
       </div>
     </div>

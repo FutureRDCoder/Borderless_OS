@@ -7,6 +7,7 @@ import type {
 } from '../../api/types'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { Loading } from '../../components/Loading'
+import { Pagination, usePagination } from '../../components/Pagination'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDateTime, formatMoney, humanizeKey } from '../../utils/format'
 
@@ -17,6 +18,9 @@ export function AdminDashboard() {
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
+  const userPages = usePagination(users)
+  const transferPages = usePagination(transfers)
+  const auditPages = usePagination(auditEvents, 5)
 
   async function load() {
     setLoading(true)
@@ -77,28 +81,34 @@ export function AdminDashboard() {
       <div className="split">
         <section className="card">
           <h2>Demo users</h2>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Display name</th>
-                  <th>Roles</th>
-                  <th>Enabled</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.email}</td>
-                    <td>{user.displayName}</td>
-                    <td>{user.roles.join(', ')}</td>
-                    <td>{user.enabled ? 'Yes' : 'No'}</td>
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Display name</th>
+                    <th>Roles</th>
+                    <th>Enabled</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {userPages.items.map((user) => (
+                    <tr key={user.id}>
+                      <td>{user.email}</td>
+                      <td>{user.displayName}</td>
+                      <td>{user.roles.join(', ')}</td>
+                      <td>{user.enabled ? 'Yes' : 'No'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              state={userPages.state}
+              onPageChange={userPages.setPage}
+            />
+          </>
         </section>
 
         <section className="card">
@@ -106,20 +116,26 @@ export function AdminDashboard() {
           {auditEvents.length === 0 ? (
             <p className="muted">No audit events recorded.</p>
           ) : (
-            <ol className="timeline compact">
-              {auditEvents.slice(0, 25).map((event) => (
-                <li key={event.id}>
-                  <span className="timeline-dot" />
-                  <div>
-                    <strong>{event.summary}</strong>
-                    <p className="muted small">
-                      {event.eventType} · {event.actorRole} ·{' '}
-                      {formatDateTime(event.createdAt)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <>
+              <ol className="timeline compact">
+                {auditPages.items.map((event) => (
+                  <li key={event.id}>
+                    <span className="timeline-dot" />
+                    <div>
+                      <strong>{event.summary}</strong>
+                      <p className="muted small">
+                        {event.eventType} · {event.actorRole} ·{' '}
+                        {formatDateTime(event.createdAt)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <Pagination
+                state={auditPages.state}
+                onPageChange={auditPages.setPage}
+              />
+            </>
           )}
         </section>
       </div>
@@ -129,43 +145,49 @@ export function AdminDashboard() {
         {transfers.length === 0 ? (
           <p className="muted">No transfers recorded.</p>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Transfer</th>
-                  <th>Destination</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transfers.slice(0, 50).map((transfer) => (
-                  <tr key={transfer.id}>
-                    <td>
-                      <strong>{transfer.recipientName}</strong>
-                      <small className="muted block mono">
-                        {transfer.id.slice(0, 8)}
-                      </small>
-                    </td>
-                    <td>
-                      {transfer.destinationCountry} /{' '}
-                      {transfer.destinationCurrency}
-                    </td>
-                    <td>
-                      {formatMoney(
-                        transfer.sourceAmount,
-                        transfer.sourceCurrency,
-                      )}
-                    </td>
-                    <td><StatusBadge status={transfer.status} /></td>
-                    <td>{formatDateTime(transfer.createdAt)}</td>
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transfer</th>
+                    <th>Destination</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Created</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {transferPages.items.map((transfer) => (
+                    <tr key={transfer.id}>
+                      <td>
+                        <strong>{transfer.recipientName}</strong>
+                        <small className="muted block mono">
+                          {transfer.id.slice(0, 8)}
+                        </small>
+                      </td>
+                      <td>
+                        {transfer.destinationCountry} /{' '}
+                        {transfer.destinationCurrency}
+                      </td>
+                      <td>
+                        {formatMoney(
+                          transfer.sourceAmount,
+                          transfer.sourceCurrency,
+                        )}
+                      </td>
+                      <td><StatusBadge status={transfer.status} /></td>
+                      <td>{formatDateTime(transfer.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              state={transferPages.state}
+              onPageChange={transferPages.setPage}
+            />
+          </>
         )}
       </section>
     </div>

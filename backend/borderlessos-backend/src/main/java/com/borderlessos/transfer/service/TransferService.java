@@ -2,6 +2,7 @@ package com.borderlessos.transfer.service;
 
 import com.borderlessos.beneficiary.entity.Beneficiary;
 import com.borderlessos.beneficiary.repository.BeneficiaryRepository;
+import com.borderlessos.common.security.AppRoles;
 import com.borderlessos.common.security.CurrentActor;
 import com.borderlessos.common.security.CurrentActorService;
 import com.borderlessos.compliance.service.ComplianceService;
@@ -383,13 +384,7 @@ public class TransferService {
     }
 
     private CurrentActor requireCustomer() {
-        CurrentActor actor = currentActorService.requireActor();
-
-        if (!actor.hasRole("CUSTOMER")) {
-            throw new IllegalStateException("Customer access is required.");
-        }
-
-        return actor;
+        return currentActorService.requireRole(AppRoles.CUSTOMER);
     }
 
     private Beneficiary findActiveBeneficiary(

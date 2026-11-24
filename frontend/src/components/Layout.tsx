@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import type { Role } from '../api/types'
 import { BrandMark, Icon, type IconName } from './Icon'
 
 interface NavLinkItem {
@@ -8,23 +9,27 @@ interface NavLinkItem {
   icon: IconName
 }
 
-function navLinksFor(role: string | null): NavLinkItem[] {
-  switch (role) {
-    case 'CUSTOMER':
-      return [
-        { to: '/customer', label: 'Overview', icon: 'home' },
-        { to: '/customer/beneficiaries', label: 'Beneficiaries', icon: 'users' },
-        { to: '/customer/transfers/new', label: 'New transfer', icon: 'send' },
-      ]
-    case 'OPERATIONS':
-      return [{ to: '/operations', label: 'Review queue', icon: 'inbox' }]
-    case 'COMPLIANCE':
-      return [{ to: '/compliance', label: 'Compliance holds', icon: 'shield' }]
-    case 'ADMIN':
-      return [{ to: '/admin', label: 'Administration', icon: 'building' }]
-    default:
-      return []
+function navLinksFor(roles: Role[]): NavLinkItem[] {
+  const links: NavLinkItem[] = []
+
+  if (roles.includes('CUSTOMER')) {
+    links.push(
+      { to: '/customer', label: 'Overview', icon: 'home' },
+      { to: '/customer/beneficiaries', label: 'Beneficiaries', icon: 'users' },
+      { to: '/customer/transfers/new', label: 'New transfer', icon: 'send' },
+    )
   }
+  if (roles.includes('OPERATIONS')) {
+    links.push({ to: '/operations', label: 'Review queue', icon: 'inbox' })
+  }
+  if (roles.includes('COMPLIANCE')) {
+    links.push({ to: '/compliance', label: 'Compliance holds', icon: 'shield' })
+  }
+  if (roles.includes('ADMIN')) {
+    links.push({ to: '/admin', label: 'Administration', icon: 'building' })
+  }
+
+  return links
 }
 
 const roleLabels: Record<string, string> = {
@@ -35,7 +40,7 @@ const roleLabels: Record<string, string> = {
 }
 
 export function Layout() {
-  const { user, primaryRole, signOut } = useAuth()
+  const { user, primaryRole, roles, signOut } = useAuth()
   const navigate = useNavigate()
 
   async function handleSignOut() {
@@ -64,7 +69,7 @@ export function Layout() {
 
         <nav className="side-nav" aria-label="Workspace navigation">
           <p className="side-nav-label">Workspace</p>
-          {navLinksFor(primaryRole).map((link) => (
+          {navLinksFor(roles).map((link) => (
             <NavLink
               key={link.to}
               to={link.to}

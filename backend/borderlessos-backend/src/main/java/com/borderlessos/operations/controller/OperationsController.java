@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/operations")
-@PreAuthorize("hasRole('OPERATIONS')")
+@PreAuthorize("hasRole(@appRoles.operations())")
 public class OperationsController {
 
     private final OperationsService operationsService;

@@ -149,7 +149,7 @@ All endpoints are under `/api/v1`. The backend uses server-side session cookies 
 | FX | `POST /fx/quotes`, `GET /fx/quotes/{id}` |
 | Customer transfers | `GET/POST /transfers`, `PATCH /transfers/{id}`, `POST /transfers/{id}/submit`, `POST /transfers/{id}/respond`, `GET /transfers/{id}/timeline` |
 | Operations | `GET /operations/queue`, `POST /operations/transfers/{id}/request-info`, `reject`, `mark-ready`, `dispatch`, `provider-status-inquiry` |
-| Compliance | `GET /compliance/queue`, `POST /compliance/transfers/{id}/place-hold`, `maintain-hold`, `clear-hold` |
+| Compliance | `GET /compliance/queue`, `GET /compliance/review-queue`, `POST /compliance/transfers/{id}/place-hold`, `maintain-hold`, `clear-hold` |
 | Admin | `GET /admin/dashboard`, `GET /admin/users`, `GET /admin/transfers`, `GET /admin/audit-events` |
 
 Errors follow a consistent shape with `status`, `code`, `message`, `path`, `requestId`, and optional `validationErrors`.

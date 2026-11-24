@@ -17,7 +17,13 @@ const benefits = [
   },
 ]
 
-export function AuthLayout({ children }: { children: ReactNode }) {
+export function AuthLayout({
+  children,
+  wide = false,
+}: {
+  children: ReactNode
+  wide?: boolean
+}) {
   return (
     <div className="auth-shell">
       <aside className="auth-aside">
@@ -78,7 +84,9 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="auth-main">
-        <div className="auth-card-wrap">{children}</div>
+        <div className={wide ? 'auth-card-wrap auth-card-wrap-wide' : 'auth-card-wrap'}>
+          {children}
+        </div>
         <p className="auth-legal">
           © {new Date().getFullYear()} BorderlessOS · Educational prototype
         </p>

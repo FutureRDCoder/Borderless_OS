@@ -1,9 +1,9 @@
 # BorderlessOS --- Role-Permission Matrix
 
 **Project:** Cross-Border Remittance & Compliance Operations Platform\
-**Version:** 1.0 --- Draft for review\
-**Status:** Proposed baseline; conditional permissions and scope
-decisions require confirmation\
+**Version:** 1.1 --- Approved implementation baseline\
+**Status:** Approved; conditional permissions are limited to the
+implemented workflows described below\
 **Scope:** Five-day educational prototype
 
 ## 1. Purpose
@@ -65,43 +65,42 @@ impersonate customers, approve transfers, or override workflow states.
   Manage own            Allowed     Denied        Denied        Denied by      Verify customer ownership
   beneficiaries                                                 default        server-side.
 
-  Request indicative FX Allowed     Conditional   Conditional   Conditional    Grant other roles access
-  quote                                                                        only where justified by an
-                                                                               operational use case.
+   Request indicative FX Allowed     Denied        Denied        Denied         Only the authenticated
+   quote                                                                        customer requests quotes.
 
   Submit transfer       Allowed     Denied        Denied        Denied         Validate request and link
   request                                                                      it to the authenticated
                                                                                customer.
 
-  View transfer details Own         Conditional   Conditional   Conditional,   Limit access to authorised
-                        transfers                               read-only      operational, compliance,
-                        only                                                   or administrative
-                                                                               purposes.
+   View transfer details Own         Conditional   Denied        Conditional,   Compliance reads the
+                         transfers                               read-only      compliance-specific hold
+                         only                                                   projection, not the customer
+                                                                                transfer endpoint.
 
-  View transfer event   Own         Conditional   Conditional   Conditional,   Apply the same
-  history               permitted                               authorised     resource-scope checks as
-                        events                                  audit scope    the transfer itself.
+   View transfer event   Own         Conditional   Allowed for    Conditional,   Compliance may read audit
+   history               permitted                 transfers     authorised     events for transfers with a
+                         events                    with a        audit scope    compliance hold, including
+                                                   compliance                   reasons.
+                                                   hold
 
   Respond to            Own         Denied        Denied        Denied         Permit only when the
   missing-information   eligible                                               workflow allows it.
   request               transfers                                              
 
-  Request missing       Denied      Allowed       Conditional   Denied by      Compliance access requires
-  information                                                   default        an explicitly defined
-                                                                               workflow.
+   Request missing       Denied      Allowed       Denied        Denied         Only Operations requests
+   information                                                                  missing information.
 
   Record routine        Denied      Allowed       Denied        Denied         Follow the state machine;
   operational review                                                           require reasons where
   decision                                                                     specified.
 
-  Refer or flag for     Denied      Allowed       Allowed       Denied by      Flagging is not compliance
-  compliance review                               within        default        clearance.
-                                                  compliance                   
-                                                  workflow                     
+   Refer or flag for     Denied      Allowed       Hold decision  Denied         A hold decision is the
+   compliance review                               only                         only compliance referral
+                                                                                mechanism implemented.
 
-  Place or maintain     Denied      Flag/refer    Allowed       Denied         Illustrative workflow
-  compliance hold                   only                                       rule, not a legal
-                                                                               determination.
+   Place or maintain     Denied      Flag/refer    Allowed       Denied         Illustrative workflow
+   compliance hold                   only                                       rule, not a legal
+                                                                                determination.
 
   Clear compliance hold Denied      Denied        Allowed,      Denied         Requires COMPLIANCE role,
                                                   conditional                  valid held state, nonblank
@@ -111,10 +110,10 @@ impersonate customers, approve transfers, or override workflow states.
   mock-provider                                                 default        never dispatch real funds.
   processing                                                                   
 
-  View mock-provider    Own         Conditional   Conditional   Conditional,   Respect transfer-level
-  outcome               permitted                               authorised     access restrictions.
-                        transfer                                scope          
-                        status                                                 
+   View mock-provider    Own         Conditional   Denied        Conditional,   Respect transfer-level
+   outcome               permitted                               authorised     access restrictions.
+                         transfer                                scope          
+                         status                                                 
 
   Manage demo-user      Denied      Denied        Denied        Allowed,       Audit administrative
   accounts                                                      within         actions.
@@ -138,21 +137,19 @@ impersonate customers, approve transfers, or override workflow states.
                                                                                enforcement.
   -------------------------------------------------------------------------------------------------------
 
-## 5. Pending scope decisions
+## 5. Resolved scope decisions
 
-The following remain proposals until explicitly confirmed:
+The implemented prototype resolves the earlier proposals as follows:
 
-1.  **ADMIN scope:** Recommended baseline is restricted
-    administration---demo-user management and approved role assignments,
-    with no transfer approvals, compliance clearance, or arbitrary
-    workflow overrides. Broader configuration may be considered without
-    weakening these restrictions.
-2.  **OPERATIONS visibility:** Recommended baseline is access to all
-    transfers in the operations queue, except records restricted to
-    compliance-only review. Assignment-only access is an alternative.
-3.  **Conditional quote access:** Customer quote access is required.
-    Access for other roles should be added only when a concrete
-    operational use case justifies it.
+1.  **ADMIN scope:** Administration is limited to the admin workspace.
+    Admin cannot approve transfers, clear compliance holds, or override
+    workflow states.
+2.  **OPERATIONS visibility:** Operations can read the operations queue,
+    but cannot clear compliance holds or dispatch a held transfer.
+3.  **Conditional quote access:** Quote creation is customer-only.
+4.  **COMPLIANCE visibility:** Compliance uses the dedicated
+    `/api/v1/compliance` endpoints. It does not use customer or
+    operations transfer endpoints.
 
 ## 6. Backend enforcement requirements
 
@@ -240,10 +237,18 @@ The following remain proposals until explicitly confirmed:
                            permitted scope         
 
    AUTH-15                 User changes a          Protected field ignored
-                           protected field through  or request rejected
-                           mass assignment         
+                            protected field through  or request rejected
+                            mass assignment         
 
-  -----------------------------------------------------------------------
+   AUTH-16                 User with COMPLIANCE     Allowed; decision actor
+                            and another role        role is COMPLIANCE
+                            clears a hold           
+
+   AUTH-17                 Compliance reads a      Allowed with reasons;
+                            held transfer's         other workspaces denied
+                            audit history          
+
+   -----------------------------------------------------------------------
 
 ## 8. Implementation notes
 
@@ -253,6 +258,11 @@ The following remain proposals until explicitly confirmed:
     over arbitrary entity updates.
 -   Keep compliance decisions separate from routine operations
     decisions.
+-   Compliance endpoints are `GET /api/v1/compliance/queue`,
+    `GET /dashboard`, `GET /transfers/{id}`,
+    `GET /transfers/{id}/decisions`,
+    `GET /transfers/{id}/audit-events`, `GET /audit-events`, and the
+    `place-hold`, `maintain-hold`, and `clear-hold` POST actions.
 -   Store status changes and privileged decisions in an auditable event
     history.
 -   Use synthetic data only.
@@ -261,12 +271,12 @@ The following remain proposals until explicitly confirmed:
 
 ## 9. Approval checklist
 
--   [ ] Four roles and their responsibilities are agreed.
--   [ ] ADMIN scope is confirmed.
--   [ ] OPERATIONS visibility model is confirmed.
--   [ ] Conditional permissions have explicit business rules.
--   [ ] Compliance clearance and mandatory-reason rules are agreed.
--   [ ] Authorisation test cases are accepted for implementation.
+-   [x] Four roles and their responsibilities are agreed.
+-   [x] ADMIN scope is confirmed.
+-   [x] OPERATIONS visibility model is confirmed.
+-   [x] Conditional permissions have explicit business rules.
+-   [x] Compliance clearance and mandatory-reason rules are agreed.
+-   [x] Authorisation test cases are accepted for implementation.
 
 ------------------------------------------------------------------------
 

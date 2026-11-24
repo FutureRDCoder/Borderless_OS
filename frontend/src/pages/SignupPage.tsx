@@ -58,6 +58,11 @@ export function SignupPage() {
   return (
     <AuthLayout>
       <div className="auth-card">
+        <Link className="auth-back" to="/login">
+          <Icon name="arrow-right" size={14} />
+          Choose account type
+        </Link>
+
         <div className="auth-card-header">
           <span className="auth-icon">
             <Icon name="users" size={20} />
@@ -142,7 +147,7 @@ export function SignupPage() {
         </form>
 
         <p className="auth-switch">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Already have an account? <Link to="/login/customer">Sign in</Link>
         </p>
 
         <p className="auth-fineprint">

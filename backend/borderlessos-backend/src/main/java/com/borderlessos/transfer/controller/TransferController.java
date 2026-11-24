@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/transfers")
-@PreAuthorize("hasRole('CUSTOMER')")
+@PreAuthorize("hasRole(@appRoles.customer())")
 public class TransferController {
 
     private final TransferService transferService;

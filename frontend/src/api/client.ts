@@ -124,6 +124,24 @@ export async function signup(input: SignupInput): Promise<void> {
   await fetchCsrfToken()
 }
 
+export interface EmployeeAccessRequestInput {
+  fullName: string
+  workEmail: string
+  requestedRole: 'ADMIN' | 'COMPLIANCE' | 'OPERATIONS'
+  note: string
+}
+
+export async function requestEmployeeAccess(
+  input: EmployeeAccessRequestInput,
+): Promise<void> {
+  await fetchCsrfToken()
+  await api('/api/v1/auth/employee-access-request', {
+    method: 'POST',
+    body: input,
+  })
+  await fetchCsrfToken()
+}
+
 export async function logout(): Promise<void> {
   await api('/api/v1/auth/logout', { method: 'POST' })
   csrfToken = null

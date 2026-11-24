@@ -136,14 +136,35 @@ export interface ComplianceHold {
   submittedAt: string | null
 }
 
+export interface ComplianceReviewTransfer {
+  transferId: string
+  recipientName: string
+  destinationCountry: string
+  destinationCurrency: string
+  sourceCurrency: string
+  sourceAmount: number
+  destinationAmount: number
+  submittedAt: string | null
+  createdAt: string
+}
+
+export type ComplianceDecisionType =
+  | 'HOLD_TRIGGERED'
+  | 'HOLD_PLACED'
+  | 'HOLD_MAINTAINED'
+  | 'HOLD_CLEARED'
+  | 'HOLD_REPLACED'
+
 export interface ComplianceDecision {
   id: string
   transferId: string
   holdId: string | null
-  decisionType: string
+  decisionType: ComplianceDecisionType
   actorEmail: string
   actorRole: string
   reason: string | null
+  previousStatus: TransferStatus | null
+  resultingStatus: TransferStatus | null
   createdAt: string
 }
 

@@ -1,19 +1,23 @@
 package com.borderlessos.compliance.service;
 
+import com.borderlessos.common.security.AppRoles;
 import com.borderlessos.common.security.CurrentActor;
 import com.borderlessos.common.security.CurrentActorService;
 import com.borderlessos.compliance.config.ComplianceProperties;
 import com.borderlessos.compliance.dto.response.ComplianceDecisionResponse;
 import com.borderlessos.compliance.dto.response.ComplianceHoldResponse;
+import com.borderlessos.compliance.dto.response.ComplianceReviewTransferResponse;
 import com.borderlessos.compliance.entity.ComplianceDecision;
 import com.borderlessos.compliance.entity.ComplianceDecisionType;
 import com.borderlessos.compliance.entity.ComplianceHold;
 import com.borderlessos.compliance.entity.ComplianceHoldStatus;
 import com.borderlessos.compliance.repository.ComplianceDecisionRepository;
 import com.borderlessos.compliance.repository.ComplianceHoldRepository;
+import com.borderlessos.operations.dto.response.AuditEventResponse;
 import com.borderlessos.transfer.entity.Transfer;
 import com.borderlessos.transfer.enums.TransferEventType;
 import com.borderlessos.transfer.enums.TransferStatus;
+import com.borderlessos.transfer.repository.TransferAuditEventRepository;
 import com.borderlessos.transfer.repository.TransferRepository;
 import com.borderlessos.transfer.service.TransferWorkflowService;
 import jakarta.persistence.EntityNotFoundException;
@@ -37,6 +41,7 @@ public class ComplianceService {
     private final ComplianceHoldRepository holdRepository;
     private final ComplianceDecisionRepository decisionRepository;
     private final TransferRepository transferRepository;
+    private final TransferAuditEventRepository auditRepository;
     private final TransferWorkflowService workflowService;
     private final ComplianceProperties properties;
     private final CurrentActorService currentActorService;
@@ -45,6 +50,7 @@ public class ComplianceService {
             ComplianceHoldRepository holdRepository,
             ComplianceDecisionRepository decisionRepository,
             TransferRepository transferRepository,
+            TransferAuditEventRepository auditRepository,
             TransferWorkflowService workflowService,
             ComplianceProperties properties,
             CurrentActorService currentActorService
@@ -52,6 +58,7 @@ public class ComplianceService {
         this.holdRepository = holdRepository;
         this.decisionRepository = decisionRepository;
         this.transferRepository = transferRepository;
+        this.auditRepository = auditRepository;
         this.workflowService = workflowService;
         this.properties = properties;
         this.currentActorService = currentActorService;
@@ -98,6 +105,8 @@ public class ComplianceService {
                 ComplianceDecisionType.HOLD_TRIGGERED,
                 CurrentActorService.SYSTEM,
                 null,
+                TransferStatus.UNDER_REVIEW,
+                TransferStatus.COMPLIANCE_HOLD,
                 now
         ));
 
@@ -138,6 +147,8 @@ public class ComplianceService {
             );
         }
 
+        boolean reHold = holdRepository.existsByTransferId(transferId);
+
         ComplianceHold hold = ComplianceHold.place(
                 transferId,
                 "MANUAL_COMPLIANCE_REVIEW",
@@ -151,9 +162,13 @@ public class ComplianceService {
         decisionRepository.save(ComplianceDecision.create(
                 transferId,
                 hold.getId(),
-                ComplianceDecisionType.HOLD_REPLACED,
+                reHold
+                        ? ComplianceDecisionType.HOLD_REPLACED
+                        : ComplianceDecisionType.HOLD_PLACED,
                 actor,
                 validatedReason,
+                TransferStatus.UNDER_REVIEW,
+                TransferStatus.COMPLIANCE_HOLD,
                 now
         ));
 
@@ -202,6 +217,8 @@ public class ComplianceService {
                 ComplianceDecisionType.HOLD_MAINTAINED,
                 actor,
                 validatedReason,
+                TransferStatus.COMPLIANCE_HOLD,
+                TransferStatus.COMPLIANCE_HOLD,
                 now
         ));
 
@@ -248,6 +265,8 @@ public class ComplianceService {
                 ComplianceDecisionType.HOLD_CLEARED,
                 actor,
                 validatedReason,
+                TransferStatus.COMPLIANCE_HOLD,
+                TransferStatus.UNDER_REVIEW,
                 now
         ));
 
@@ -262,6 +281,15 @@ public class ComplianceService {
         );
 
         return ComplianceHoldResponse.from(hold, transfer);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ComplianceReviewTransferResponse> getUnderReviewTransfers() {
+        return transferRepository
+                .findTop200ByStatusOrderByCreatedAtAsc(TransferStatus.UNDER_REVIEW)
+                .stream()
+                .map(ComplianceReviewTransferResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -281,12 +309,9 @@ public class ComplianceService {
     @Transactional(readOnly = true)
     public ComplianceHoldResponse getHold(UUID transferId) {
         ComplianceHold hold = holdRepository
-                .findFirstByTransferIdAndStatusOrderByOpenedAtDesc(
-                        transferId,
-                        ComplianceHoldStatus.ACTIVE
-                )
+                .findFirstByTransferIdOrderByOpenedAtDesc(transferId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Active compliance hold not found."
+                        "Compliance hold not found."
                 ));
 
         return ComplianceHoldResponse.from(hold, requireTransfer(transferId));
@@ -311,6 +336,23 @@ public class ComplianceService {
     }
 
     @Transactional(readOnly = true)
+    public List<AuditEventResponse> getAuditEvents(UUID transferId) {
+        requireTransfer(transferId);
+
+        if (!holdRepository.existsByTransferId(transferId)) {
+            throw new EntityNotFoundException(
+                    "No compliance hold was found for this transfer."
+            );
+        }
+
+        return auditRepository
+                .findAllByTransferIdOrderByCreatedAtAsc(transferId)
+                .stream()
+                .map(AuditEventResponse::forCompliance)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public long countActiveHolds() {
         return holdRepository.countByStatus(ComplianceHoldStatus.ACTIVE);
     }
@@ -323,15 +365,7 @@ public class ComplianceService {
     }
 
     private CurrentActor requireComplianceActor() {
-        CurrentActor actor = currentActorService.requireActor();
-
-        if (!actor.hasRole("COMPLIANCE")) {
-            throw new IllegalStateException(
-                    "Only the COMPLIANCE role may perform this action."
-            );
-        }
-
-        return actor;
+        return currentActorService.requireRole(AppRoles.COMPLIANCE);
     }
 
     private String requireReason(String reason) {

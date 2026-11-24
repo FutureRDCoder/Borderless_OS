@@ -3,6 +3,7 @@ import { api } from '../../api/client'
 import type { Beneficiary } from '../../api/types'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { Loading } from '../../components/Loading'
+import { Pagination, usePagination } from '../../components/Pagination'
 import { formatDateTime } from '../../utils/format'
 
 const destinations = [
@@ -32,6 +33,7 @@ export function BeneficiariesPage() {
   const [formError, setFormError] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const beneficiaryPages = usePagination(beneficiaries, 5)
 
   async function load() {
     setLoading(true)
@@ -121,29 +123,35 @@ export function BeneficiariesPage() {
           ) : beneficiaries.length === 0 ? (
             <p className="muted">No active beneficiaries yet.</p>
           ) : (
-            <div className="stack">
-              {beneficiaries.map((beneficiary) => (
-                <article className="list-row" key={beneficiary.id}>
-                  <div>
-                    <strong>{beneficiary.recipientName}</strong>
-                    <p className="muted small">
-                      {beneficiary.destinationCountry} /{' '}
-                      {beneficiary.destinationCurrency} ·{' '}
-                      {beneficiary.accountReference}
-                    </p>
-                    <p className="muted small">
-                      Added {formatDateTime(beneficiary.createdAt)}
-                    </p>
-                  </div>
-                  <button
-                    className="button small danger"
-                    onClick={() => deactivate(beneficiary)}
-                  >
-                    Deactivate
-                  </button>
-                </article>
-              ))}
-            </div>
+            <>
+              <div className="stack">
+                {beneficiaryPages.items.map((beneficiary) => (
+                  <article className="list-row" key={beneficiary.id}>
+                    <div>
+                      <strong>{beneficiary.recipientName}</strong>
+                      <p className="muted small">
+                        {beneficiary.destinationCountry} /{' '}
+                        {beneficiary.destinationCurrency} ·{' '}
+                        {beneficiary.accountReference}
+                      </p>
+                      <p className="muted small">
+                        Added {formatDateTime(beneficiary.createdAt)}
+                      </p>
+                    </div>
+                    <button
+                      className="button small danger"
+                      onClick={() => deactivate(beneficiary)}
+                    >
+                      Deactivate
+                    </button>
+                  </article>
+                ))}
+              </div>
+              <Pagination
+                state={beneficiaryPages.state}
+                onPageChange={beneficiaryPages.setPage}
+              />
+            </>
           )}
         </section>
 

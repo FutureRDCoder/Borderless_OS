@@ -4,6 +4,7 @@ import { api } from '../../api/client'
 import type { OperationsTransfer, TransferStatus } from '../../api/types'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { Loading } from '../../components/Loading'
+import { Pagination, usePagination } from '../../components/Pagination'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDateTime, formatMoney, humanizeKey } from '../../utils/format'
 
@@ -26,6 +27,7 @@ export function OperationsDashboard() {
   const [filter, setFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
+  const queuePages = usePagination(queue)
 
   async function load() {
     setLoading(true)
@@ -83,7 +85,10 @@ export function OperationsDashboard() {
             Status
             <select
               value={filter}
-              onChange={(event) => setFilter(event.target.value)}
+                onChange={(event) => {
+                  setFilter(event.target.value)
+                  queuePages.setPage(1)
+                }}
             >
               <option value="">Open queue</option>
               {filterStatuses.map((status) => (
@@ -98,46 +103,59 @@ export function OperationsDashboard() {
         ) : queue.length === 0 ? (
           <p className="muted">No transfers match this view.</p>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Transfer</th>
-                  <th>Customer</th>
-                  <th>Destination</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Updated</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {queue.map((transfer) => (
-                  <tr key={transfer.id}>
-                    <td>
-                      <strong>{transfer.recipientName}</strong>
-                      <small className="muted block mono">
-                        {transfer.id.slice(0, 8)}
-                      </small>
-                    </td>
-                    <td className="mono small">{transfer.customerId.slice(0, 8)}</td>
-                    <td>{transfer.destinationCountry} / {transfer.destinationCurrency}</td>
-                    <td>{formatMoney(transfer.sourceAmount, transfer.sourceCurrency)}</td>
-                    <td><StatusBadge status={transfer.status} /></td>
-                    <td>{formatDateTime(transfer.updatedAt)}</td>
-                    <td>
-                      <Link
-                        className="button small"
-                        to={`/operations/transfers/${transfer.id}`}
-                      >
-                        Review
-                      </Link>
-                    </td>
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transfer</th>
+                    <th>Customer</th>
+                    <th>Destination</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Updated</th>
+                    <th />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {queuePages.items.map((transfer) => (
+                    <tr key={transfer.id}>
+                      <td>
+                        <strong>{transfer.recipientName}</strong>
+                        <small className="muted block mono">
+                          {transfer.id.slice(0, 8)}
+                        </small>
+                      </td>
+                      <td className="mono small">
+                        {transfer.customerId.slice(0, 8)}
+                      </td>
+                      <td>
+                        {transfer.destinationCountry} /{' '}
+                        {transfer.destinationCurrency}
+                      </td>
+                      <td>
+                        {formatMoney(transfer.sourceAmount, transfer.sourceCurrency)}
+                      </td>
+                      <td><StatusBadge status={transfer.status} /></td>
+                      <td>{formatDateTime(transfer.updatedAt)}</td>
+                      <td>
+                        <Link
+                          className="button small"
+                          to={`/operations/transfers/${transfer.id}`}
+                        >
+                          Review
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              state={queuePages.state}
+              onPageChange={queuePages.setPage}
+            />
+          </>
         )}
       </section>
     </div>

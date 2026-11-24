@@ -2,11 +2,13 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, ApiError } from '../../api/client'
 import type {
+  AuditEvent,
   ComplianceDecision,
   ComplianceHold,
 } from '../../api/types'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { Loading } from '../../components/Loading'
+import { Pagination, usePagination } from '../../components/Pagination'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDateTime, formatMoney } from '../../utils/format'
 
@@ -14,11 +16,14 @@ export function ComplianceDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [hold, setHold] = useState<ComplianceHold | null>(null)
   const [decisions, setDecisions] = useState<ComplianceDecision[]>([])
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([])
   const [reason, setReason] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const [notice, setNotice] = useState('')
+  const decisionPages = usePagination(decisions, 5)
+  const auditPages = usePagination(auditEvents, 5)
 
   async function loadDecisions(transferId: string) {
     setDecisions(
@@ -39,15 +44,19 @@ export function ComplianceDetailPage() {
       api<ComplianceDecision[]>(
         `/api/v1/compliance/transfers/${id}/decisions`,
       ),
+      api<AuditEvent[]>(
+        `/api/v1/compliance/transfers/${id}/audit-events`,
+      ),
     ])
-      .then(([nextHold, nextDecisions]) => {
+      .then(([nextHold, nextDecisions, nextAuditEvents]) => {
         setHold(nextHold)
         setDecisions(nextDecisions)
+        setAuditEvents(nextAuditEvents)
       })
       .catch((nextError) => {
         if (nextError instanceof ApiError && nextError.status === 404) {
           setError(new Error(
-            'No active hold was found. It may already have been cleared.',
+            'No compliance hold was found for this transfer.',
           ))
         } else {
           setError(nextError)
@@ -214,25 +223,71 @@ export function ComplianceDetailPage() {
         <h2>Decision history</h2>
         {decisions.length === 0 ? (
           <p className="muted">No decisions recorded.</p>
-        ) : (
-          <ol className="timeline">
-            {decisions.map((decision) => (
-              <li key={decision.id}>
-                <span className="timeline-dot" />
-                <div>
-                  <strong>{decision.decisionType}</strong>
-                  <p className="muted small">
-                    {decision.actorEmail} · {decision.actorRole} ·{' '}
-                    {formatDateTime(decision.createdAt)}
-                  </p>
-                  {decision.reason && (
-                    <p className="small">Reason: {decision.reason}</p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ol>
-        )}
+          ) : (
+            <>
+              <ol className="timeline">
+                {decisionPages.items.map((decision) => (
+                  <li key={decision.id}>
+                    <span className="timeline-dot" />
+                    <div>
+                      <strong>{decision.decisionType}</strong>
+                      <p className="muted small">
+                        {decision.actorEmail} · {decision.actorRole} ·{' '}
+                        {formatDateTime(decision.createdAt)}
+                      </p>
+                      {decision.previousStatus && decision.resultingStatus && (
+                        <p className="muted small">
+                          {decision.previousStatus} → {decision.resultingStatus}
+                        </p>
+                      )}
+                      {decision.reason && (
+                        <p className="small">Reason: {decision.reason}</p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <Pagination
+                state={decisionPages.state}
+                onPageChange={decisionPages.setPage}
+              />
+            </>
+          )}
+      </section>
+
+      <section className="card">
+        <h2>Transfer audit history</h2>
+        <p className="muted small">
+          Compliance audit access includes the reason recorded for each
+          transfer event.
+        </p>
+        {auditEvents.length === 0 ? (
+          <p className="muted">No transfer events recorded.</p>
+          ) : (
+            <>
+              <ol className="timeline">
+                {auditPages.items.map((event) => (
+                  <li key={event.id}>
+                    <span className="timeline-dot" />
+                    <div>
+                      <strong>{event.eventType}</strong>
+                      <p className="muted small">
+                        {event.actorEmail} · {event.actorRole} ·{' '}
+                        {formatDateTime(event.createdAt)}
+                      </p>
+                      {event.reason && (
+                        <p className="small">Reason: {event.reason}</p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <Pagination
+                state={auditPages.state}
+                onPageChange={auditPages.setPage}
+              />
+            </>
+          )}
       </section>
     </div>
   )

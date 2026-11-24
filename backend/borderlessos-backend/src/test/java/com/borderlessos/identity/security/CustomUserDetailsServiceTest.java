@@ -117,6 +117,34 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
+    void shouldLoadComplianceAuthority() {
+
+        User compliance = new User(
+                "compliance@borderlessos.local",
+                "$2a$12$examplePasswordHash",
+                "Demo Compliance"
+        );
+        compliance.addRole(
+                new Role(
+                        UUID.randomUUID(),
+                        "COMPLIANCE"
+                )
+        );
+
+        when(userRepository.findByEmail(
+                "compliance@borderlessos.local"
+        )).thenReturn(Optional.of(compliance));
+
+        UserDetails result = userDetailsService.loadUserByUsername(
+                "compliance@borderlessos.local"
+        );
+
+        assertTrue(result.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_COMPLIANCE"::equals));
+    }
+
+    @Test
     void shouldLoadMultipleRoles() {
 
         customer.addRole(

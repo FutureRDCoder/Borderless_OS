@@ -1,5 +1,6 @@
 package com.borderlessos.provider.service;
 
+import com.borderlessos.common.security.AppRoles;
 import com.borderlessos.common.security.CurrentActor;
 import com.borderlessos.common.security.CurrentActorService;
 import com.borderlessos.compliance.entity.ComplianceHoldStatus;
@@ -276,14 +277,6 @@ public class ProviderService {
     }
 
     private CurrentActor requireOperationsActor() {
-        CurrentActor actor = currentActorService.requireActor();
-
-        if (!actor.hasRole("OPERATIONS")) {
-            throw new IllegalStateException(
-                    "Only the OPERATIONS role may perform provider actions."
-            );
-        }
-
-        return actor;
+        return currentActorService.requireRole(AppRoles.OPERATIONS);
     }
 }

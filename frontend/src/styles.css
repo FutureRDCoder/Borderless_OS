@@ -761,6 +761,22 @@ textarea {
   font-weight: 700;
 }
 
+/* Pagination */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.9rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 /* Tables */
 .table-wrap {
   overflow-x: auto;
@@ -1375,6 +1391,10 @@ dd {
   width: min(470px, 100%);
 }
 
+.auth-card-wrap-wide {
+  width: min(760px, 100%);
+}
+
 .auth-card {
   padding: clamp(1.5rem, 3.2vw, 2.1rem);
   border: 1px solid #e5eaf2;
@@ -1529,6 +1549,82 @@ dd {
   color: #98a2b3;
   font-size: 0.65rem;
   text-align: center;
+}
+
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.auth-back .icon {
+  transform: rotate(180deg);
+}
+
+.auth-back:hover {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.auth-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.auth-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.15rem;
+  border: 1px solid #e5eaf2;
+  border-radius: 16px;
+  background: #fbfcfe;
+}
+
+.auth-choice-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid #dbe7fb;
+  border-radius: 12px;
+  background: #f2f7ff;
+  color: var(--primary);
+}
+
+.auth-choice h3 {
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.auth-choice > p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.auth-choice > .auth-choice-roles {
+  color: var(--primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.auth-choice-actions {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.auth-choice-actions .button {
+  padding-inline: 0.6rem;
 }
 
 .login-shell {
@@ -1711,6 +1807,10 @@ dd {
     width: min(540px, 100%);
   }
 
+  .auth-card-wrap-wide {
+    width: min(700px, 100%);
+  }
+
   .auth-card {
     box-shadow: var(--shadow);
   }
@@ -1735,7 +1835,8 @@ dd {
     grid-template-columns: 1fr;
   }
 
-  .field-row {
+  .field-row,
+  .auth-choices {
     grid-template-columns: 1fr;
   }
 

@@ -20,6 +20,7 @@ interface AuthContextValue {
   user: AuthUser | null
   initialising: boolean
   primaryRole: Role | null
+  roles: Role[]
   signIn: (email: string, password: string) => Promise<void>
   signUp: (input: SignupInput) => Promise<void>
   signOut: () => Promise<void>
@@ -31,12 +32,16 @@ function normaliseRole(role: string): Role {
   return role.replace(/^ROLE_/, '') as Role
 }
 
-function primaryRoleOf(user: AuthUser | null): Role | null {
+function rolesOf(user: AuthUser | null): Role[] {
   if (!user) {
-    return null
+    return []
   }
 
-  const roles = user.roles.map(normaliseRole)
+  return [...new Set(user.roles.map(normaliseRole))]
+}
+
+function primaryRoleOf(user: AuthUser | null): Role | null {
+  const roles = rolesOf(user)
 
   if (roles.includes('CUSTOMER')) return 'CUSTOMER'
   if (roles.includes('OPERATIONS')) return 'OPERATIONS'
@@ -78,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     initialising,
     primaryRole: primaryRoleOf(user),
+    roles: rolesOf(user),
     signIn,
     signUp,
     signOut,

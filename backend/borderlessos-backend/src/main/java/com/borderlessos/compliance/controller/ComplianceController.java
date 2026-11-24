@@ -3,7 +3,9 @@ package com.borderlessos.compliance.controller;
 import com.borderlessos.compliance.dto.request.ReasonRequest;
 import com.borderlessos.compliance.dto.response.ComplianceDecisionResponse;
 import com.borderlessos.compliance.dto.response.ComplianceHoldResponse;
+import com.borderlessos.compliance.dto.response.ComplianceReviewTransferResponse;
 import com.borderlessos.compliance.service.ComplianceService;
+import com.borderlessos.operations.dto.response.AuditEventResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/compliance")
-@PreAuthorize("hasRole('COMPLIANCE')")
+@PreAuthorize("hasRole(@appRoles.compliance())")
 public class ComplianceController {
 
     private final ComplianceService complianceService;
@@ -27,6 +29,11 @@ public class ComplianceController {
     @GetMapping("/queue")
     public ResponseEntity<List<ComplianceHoldResponse>> getQueue() {
         return ResponseEntity.ok(complianceService.getActiveHolds());
+    }
+
+    @GetMapping("/review-queue")
+    public ResponseEntity<List<ComplianceReviewTransferResponse>> getReviewQueue() {
+        return ResponseEntity.ok(complianceService.getUnderReviewTransfers());
     }
 
     @GetMapping("/dashboard")
@@ -62,6 +69,13 @@ public class ComplianceController {
         }
 
         return ResponseEntity.ok(complianceService.getRecentDecisions());
+    }
+
+    @GetMapping("/transfers/{id}/audit-events")
+    public ResponseEntity<List<AuditEventResponse>> getTransferAuditEvents(
+            @PathVariable UUID id
+    ) {
+        return ResponseEntity.ok(complianceService.getAuditEvents(id));
     }
 
     @PostMapping("/transfers/{id}/place-hold")

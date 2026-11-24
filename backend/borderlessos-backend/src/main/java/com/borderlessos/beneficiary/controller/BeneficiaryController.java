@@ -26,7 +26,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/beneficiaries")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('CUSTOMER')")
+@PreAuthorize("hasRole(@appRoles.customer())")
 public class BeneficiaryController {
 
     private final BeneficiaryService beneficiaryService;
